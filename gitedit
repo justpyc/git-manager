@@ -1,0 +1,243 @@
+对于任何一个文件，在Git内都只有3种状态：已提交（committed），已修改（modified）和已暂存（staged）。已提交表示该文件已经被安全地波啊存在本地数据库中了，已修改表示修改了某个文件，但还没有提交保存，已暂存表示把已修改的文件放在下次提交时要保存的清单中。
+一.基本的Git工作流程如下所示：
+在工作目录中修改某些文件
+对这些修改了的文件做快照，并保存到暂存区域
+提交更新，将保存在暂存区域的文件快照转储到git目录中
+
+
+二.Git安装
+yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel -y
+从源码安装
+tar zxf git-1.6.0.5.tar.gz
+cd git-1.6.0.5
+make prefix=/usr/local
+make install
+2. rpm包安装
+yum install git git-core -y
+三.初次运行Git前的配置
+Git的配置文件有：/etc/gitconfig,~/.gitconfig,.git/config(工作目录里)，每个级别的配置都会覆盖上层相同配置，所有.git/config里的配置会覆盖/etc/gitconfig中的同名变量
+1.用户信息
+git config ?global user.name “John Doe”
+git config ?global user.email johnode@example.com
+2.编辑器
+git config ?global core.editor vi
+git config ?list 检查已有的配置信息
+?global选项，读写的是/etc/gitconfig
+?system选项，读写的是~/.gitconfig
+四.Git的基础用法
+取得项目的Git仓库
+1.从当前目录初始化git init
+2.从现有仓库克隆eg:git clone git://github.com/schacon/grit.git
+Git的常用操作工作目录下面的所有文件都不外乎两种状态：已跟踪或未跟踪。已跟踪的文件就是指本来就被纳入版本控制管理的文件，其它文件都属于未跟踪文件
+基本操作
+1.git status 确定哪些文件当前处于什么状态
+2.git add filename 开始跟踪一个新文件或者把已跟踪的文件放到暂存区
+3.git diff 查看尚未暂存的文件更新了哪些部分
+git diff ?cached 查看已经暂存起来的文件和上次提交时的快照之间的差异
+4.git commit -m “string” 提交更新只限于暂存区域的文件
+git commit -a -m “string” 把所有已经跟踪过的文件暂存起来一并提交，从而跳过了git add步骤 5.git rm filename 从已跟踪文件清单中移除某个文件
+6.git rm ?cached filename 文件从Git仓库删除，但仍保留在当前的工作目录中
+7.git mv file1 file2 移动文件或者重命名文件
+8.git log 查看提交历史
+git log -p -2 -p选项展开显示每次提交的内容差异，-2表示仅显示最近的2次更新
+git log ?stat 快速浏览其他协作者提交的更新都做了哪些改动
+git log ?pretty=oneline 使用完全不同与默认格式的方式展示提交历史
+gitk 是git的图形化查询提交历史的工具
+9.git commit ?amend 撤销操作
+eg：git commit -m “initial commit”
+git add file
+git commit ?amend 这三条命令最终得到一个提交，第二个提交命令修正了第一个提交的内容
+10.git reset HEAD filename 取消已暂存的文件，该命令是git status 后出现的提示命令
+11.git checkout ? filename 取消对文件的修改，该命令是git status 后出现的提示命令
+五.对远程仓库的使用
+git clone git://github.com/schacon/ticgit.git
+cd ticgit
+1.git remote 列出远程库的简短名字
+git remote -v 显示远程库的简短名字和对应的克隆地址
+2.git remote add pb git://github.com/paulboone/ticgit.git 添加一个新的远程仓库，指定一个简短的名字，一边将来引用git fetch pb 抓取所有paulboone有的，本地仓库没有的信息
+3.git push origin master 把本地的master分支推送到origin服务器上，只有所有克隆的服务器有写权限，并且同一时刻没有其他人在推送数据，这条命令才会如期执行，其他人如果推送了若干更新，那你的操作会被驳回，你必须把他们的更新抓取到本地，并到自己的项目中，才能再次推送
+4.git remote rename pb paul 修改某个远程仓库的简短名称，把pb改成paul
+5.git remote rm paul 移除远端的仓库
+
+一.Git分支介绍与创建
+Git中的分支，其实本质上仅仅是个指向commit对象的可变指针。Git回使用master作为分支的默认名
+字，在若干次提交后，你其实已经有了一个指向最后一次提交对象的master分支，它在每次提交的时候
+都会自动向前移动。
+1.Git分支的创建,切换和删除
+git branch 不带参数，它会给出当前所有分支的清单，*表示当前所在的分支
+git branch -v 附带显示各个分支最后一次commit信息
+git branch testing 创建一个tesing分支，这仅仅是建立一个新分支，但不会自动切换到这个分支上去，此时依然在master分支上工作
+git checkout testing 切换到testing分支
+git checkout -b iss53 新建并切换到该分支iss53
+git merge hotfix 用来合并分支，将当前分支合并到hotfix分支上
+git branch -d hotfix 删除分支hotfix
+2.Git分支管理
+git branch ?merged 查看哪些分支已经并入当前分支
+git branch ?no-merged 查看尚未和并的分支
+git push origin serverfix 把分支serverfix推送到远程仓库origin,git默认拒绝了push操作，需要进行设置，修改.git/config添加如下代码：[receive] denyCurrentBranch = ignore
+git fetch origin 从远程仓库origin获取数据，在fetch操作抓来的新的远程分支后，无法在本地编辑该远程仓库，如果要把该内容合并到当前分支，可以运行git merge origin/branchname,如果想要一份自己的branchname，可以git checkout -b serverfix orgigin/branchname
+git pull git://github.com/project.git 抓取远程仓库上的数据
+二.服务器上的Git
+Git可以使用四种主要的协议来传输数据：本地传输，ssh协议，git协议，和http协议
+本地协议
+git clone /opt/git/project.git 或者git clone file:///opt/git/project.git
+git remote add local_proj /opt/git/project.git 添加一个本地仓库到现有Git工程
+ssh协议
+git clone ssh://user@server:project.git 或者git clone user@server:project.git
+http/s协议
+cd /var/www/htdocs
+git clone ?bare /path/to/git_project gitproject.git
+cd gitproject.git
+mv hooks/post-update.sample hooks/post-update
+chmod +x hooks/post-update 之后就可clone仓库git clone http://example.com/gitproject.git
+在服务器上部署Git
+开始架设 Git 服务器的时候，需要把一个现存的仓库导出为新的纯仓库，纯仓库的目录名以 .git 结尾git clone ?bare my_project my_project.git有了仓库的纯副本以后，剩下的就是把它放在服务器上并设定相关的协议。假设一个域名为git.example.com 的服务器已经架设好，并可以通过 SSH 访问，而你想把所有的 Git 仓库储存在 /opt/git 目录下。只要把纯仓库复制上去： scp -r my_project.git user@git.example.com:/opt/git ，现在，其他对该服务器具有ssh访问权限并可以读取/opt/git的用户就可以用一下命令clone
+git clone user@git.example.com:/opt/git/my_project.git
+三.实例
+实例1：用authorized_keys方法来给用户授权(先做服务器端操作，后做客户机上操作)
+在客户机上
+ssh-kengen
+ssh-copy-id -i id_rsa.pub git@ip(服务器)
+cd myproject
+git init
+git add .
+git commit -m “initial commit”
+git remote add origin git@gitserver:/opt/git/project.git
+git push origin master
+Git服务器上
+useradd git
+passwd git
+cd /opt/git
+mkdir project.git
+cd project.git
+git ?bare init 生成一个不含工作目录的*空仓库*,这样空仓库本地不能执行git status,git add等动作，适合远程发布仓库
+如果往裸仓库放东西的话，可以这样
+cd /opt/git/
+mkdir project
+echo “hello world!” > file1
+git add .
+git commit -m “initial commit”
+git clone ?bare project project.git
+然后从本地clone该仓库
+git clone git@servername:/opt/git/project.git
+本地会生成一个project文件夹，file1文件会在此
+
+实例2：公共访问
+Git服务器上
+mkdir /opt/git/project.git
+groupadd www-data
+cd project.git
+git ?bare init
+mv hooks/post-update.sample hooks/post-update
+chmod +x hooks/post-update更改apache的配置文件
+ServerName git.gitserver
+DocumentRoot /opt/git
+
+Order allow, deny
+allow from all
+
+chgrp -R www-data /opt/git
+重启apache就可以使用git clone http://git.gitserver/project.git
+
+git log ?pretty=oneline 查看 git 日志以一行显示的方式
+git status 查看文件状态
+HEAD 当前版本库的头指针
+HEAD^表示HEAD的父提交
+
+合并
+1.在合并修改的时候，先将master 分支更新到最新状态：
+git checkout master && git pull ?rebase
+2.检查待合并的临时分支在不在本地：
+git branch
+3.如果不在的话，获取之:
+git fetch origin
+4.合并该分支并push 到gitlab:
+git merge origin/upgrade-package-sae-deploy  ?no-ff
+?no-ff指的是强行关闭fast-forward方式
+fast-forward方式就是当条件允许的时候，git直接把HEAD指针指向合并分支的头，完成合并。属于“快进方式”，不过这种情况如果删除分支，则会丢失分支信息。因为在这个过程中没有创建commit
+git push origin maste
+
+删除远程分支
+git push origin  :分支名   注意冒号
+
+git pull 和git push
+git push命令用于将本地分支的更新，推送到远程主机
+git push <远程主机名> <本地分支名>:<远程分支名>
+git push origin master  省略远程分支名，则表示将本地分支推送与之存在”追踪关系”的远程分支(通常两者同名)，如果该远程分支不存在，则会被新建,将本地的master分支推送到origin主机的master分支
+git push origin :add-nodes 删除远程的add-nodes分支，此时省略了本地分支名
+git push origin  当前分支与远程分支之间存在追踪关系，则本地分支和远程分支都可以省略,此处表示将当前分支推送到origin主机的对应分支
+git push 如果当前分支只有一个追踪分支，那么主机名都可以省略
+git push ?all  origin  不管是否存在对应的远程分支，将本地的所有分支都推送到远程主机，这时需要使用?all选项
+
+git pull 取回远程主机某个分支的更新，再与本地的指定分支合并
+git pull <远程主机名> <远程分支名>:<本地分支名>
+git pull origin next:master 取回origin主机的next分支，与本地的master分支合并
+git pull origin next  远程分支是与当前分支合并，则冒号后面的部分可以省略，取回origin/next分支，再与当前分支合并
+实质上，这等同于先做git fetch，再做git merge
+git fetch origin
+git merge origin/next
+git pull origin 当前分支与远程分支存在追踪关系，git pull就可以省略远程分支名，本地的当前分支自动与对应的origin主机”追踪分支”(remote-tracking branch)进行合并
+git pull 当前分支自动与唯一一个追踪分支进行合并
+
+git pull 的默认行为是git fetch + git merge
+git pull ?rebase 则是git fetch + git rebase
+git merge:
+简单来说，它把两条不同分支历史的所有提交合并成一条线，并在“末端”打个结，即生成一次合并提交。最后形成一条单一的提交线。
+git rebase:
+根据参数的不同，行为有些差别。但总的来说，它相当于把分叉的两条历史提交线中的一条，每一次提交都捡选出来， 在另一条提交线上提交。最后也形成一条单一的提交线。
+对比来看，git merge多了一次提交“合并提交”。git rebase则没有。不过，git merge保存了两条线的历史。而git rebase则会破坏历史。因为每一次rebase, 提交id会变化(因为父提交变了，而父提交Id是用来生成提交id的内容之一）
+
+FETCH_HEAD指的是: 某个branch在服务器上的最新状态
+如果没有显式的指定远程分支, 则远程分支的master将作为默认的FETCH_HEAD
+如果指定了远程分支, 就将这个远程分支作为FETCH_HEAD
+git fetch:
+创建并更新所有远程分支的本地远程分支,fetch会自动获取远程’新加入’的分支
+设定当前分支的FETCH_HEAD为远程服务器的master分支
+git fetch origin
+手动指定了remote
+git fetch origin branch1
+设定当前分支的 FETCH_HEAD 为远程服务器的branch1分支,在这种情况下, 不会在本地创建本地远程分支
+git fetch origin branch1:branch2
+首先执行上面的fetch操作,使用远程branch1分支在本地创建branch2(但不会切换到该分支),如果本地不存在branch2分支, 则会自动创建一个新的branch2分支，如果本地存在branch2分支, 并且是`fast forward’, 则自动合并两个分支, 否则, 会阻止以上操作
+git fetch origin :branch2
+等价于: git fetch origin master:branch2
+
+回滚
+1.首次修改回滚
+git checkout 要回滚的文件
+eg: git checkout index.php ,index.php有修改
+2.暂存区域回滚
+git status  可以根据提示进行操作
+git reset 要回滚的文件
+eg: git reset index.php   从暂存区域删除
+git checkout index.php  从工作目录中删除
+3.commit 之后的回滚
+修改最新提交的提交说明，使用git commit ?amend
+3.1.没有push
+使用reset
+git reset [?soft | ?mixed | ?hard] <commit>
+?hard
+替换引用的指向，引用指向新的提交ID
+替换暂存区
+替换工作目录
+?soft
+替换引用的指向，不替换暂存区，不替换工作目录
+?mixed
+替换引用的指向，替换暂存区，不替换工作目录
+3.2.已经push
+使用revert
+git revert用于反转提交,执行revert命令时要求工作树必须是干净的.
+git revert用一个新提交来消除一个历史提交所做的任何修改.
+revert 之后你的本地代码会回滚到指定的历史版本,这时你再 git push 即可以把线上的代码更新.(这里不会像reset造成冲突的问题)
+revert 使用,需要先找到你想回滚版本唯一的commit标识代码,可以用 git log 或者在adgit搭建的web环境历史提交记录里查看.
+git revert c011eb3c20ba6fb38cc94fe5a8dda366a3990c61
+git revert c011eb3   通常,前几位即可
+git push origin master 重新push到远端仓库
+git merge的revert, git merge 之后会出现2个父提交，-m参数指定那条是master分支，会保留-m指定的分支，revert另外一条分支
+git revert -m 1 c011eb3    保留c011eb3，revert c5b0950
+git revert -m 2 c5b0950    保留c5b0950，revert c011eb3
+git merge后查看git log 里面会出现2个父提交，-m 1 表示指定第一个提交是master分支，revert另外一个分支，-m 2 指定第二个提交是master分支，revert另外一个分支
+4.git revert 和 git reset的区别
+4.1. git revert是用一次新的commit来回滚之前的commit，git reset是直接删除指定的commit。
+4.2. 在回滚这一操作上看，效果差不多。但是在日后继续merge以前的老版本时有区别。因为git revert是用一次逆向的commit“中和”之前的提交，因此日后合并老的branch时，导致这部分改变不会再次出现，但是git reset是之间把某些commit在某个branch上删除，因而和老的branch再次merge时，这些被回滚的commit应该还会被引入。
+4.3. git reset 是把HEAD向后移动了一下，而git revert是HEAD继续前进，只是新的commit的内容和要revert的内容正好相反，能够抵消要被revert的内容。
